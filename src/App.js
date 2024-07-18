@@ -1,16 +1,43 @@
 import React, { useState } from "react";
 
-const initialItems = [
-  { id: 1, description: "Passports", quantity: 2, packed: false },
-  { id: 2, description: "Socks", quantity: 12, packed: true },
-  { id: 3, description: "Charger", quantity: 12, packed: false },
-];
+// const initialItems = [
+//   { id: 1, description: "Passports", quantity: 2, packed: false },
+//   { id: 2, description: "Socks", quantity: 12, packed: true },
+//   { id: 3, description: "Charger", quantity: 12, packed: false },
+// ];
+
 export default function App() {
+  // lifting state up to first commom parent
+  const [items, setItems] = useState([]);
+
+  //  handle add items in form component
+  function handleAddItems(item) {
+    setItems((items) => [...items, item]);
+  }
+
+  // delete items
+  function handleDeleteItem(id) {
+    setItems((items) => items.filter((item) => item.id !== id));
+  }
+
+  // update items in items list
+  function handleToggleItem(id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <PackingList />
+      <Form onAddItems={handleAddItems} />
+      <PackingList
+        items={items}
+        onDeleteItem={handleDeleteItem}
+        onToggleItem={handleToggleItem}
+      />
       <Stats />
     </div>
   );
@@ -22,7 +49,7 @@ function Logo() {
 }
 
 //  form component
-function Form() {
+function Form({ onAddItems }) {
   // state
   const [desc, setDesc] = useState("");
   const [count, setCount] = useState(1);
@@ -33,7 +60,10 @@ function Form() {
     if (!desc) return;
 
     const newItem = { desc, count, packed: false, id: Date.now() };
-    console.log(newItem);
+    // console.log(newItem);
+
+    // calling Add items function
+    onAddItems(newItem);
 
     // once submitted
     setDesc("");
@@ -63,26 +93,36 @@ function Form() {
 }
 
 // packinglist component
-function PackingList() {
+function PackingList({ items, onDeleteItem, onToggleItem }) {
   return (
     <div className="list">
       <ul>
-        {initialItems.map((item) => (
-          <Item item={item} key={item.id} />
+        {items.map((item) => (
+          <Item
+            item={item}
+            key={item.id}
+            onDeleteItem={onDeleteItem}
+            onToggleItem={onToggleItem}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function Item({ item }) {
+//  display items in the ui as list
+function Item({ item, onDeleteItem, onToggleItem }) {
   return (
     <li>
+      <input
+        type="checkbox"
+        value={item.packed}
+        onChange={() => onToggleItem(item.id)}
+      ></input>
       <span style={item.packed ? { textDecoration: "line-through" } : {}}>
-        {item.quantity}
-        {item.description}
+        {item.count} {item.desc}
       </span>
-      <button>❌</button>
+      <button onClick={() => onDeleteItem(item.id)}>❌</button>
     </li>
   );
 }
